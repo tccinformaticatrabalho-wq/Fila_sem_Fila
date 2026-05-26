@@ -8,9 +8,14 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-database.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBk7mgMUTUwqRe2bSVDtvbJZ80g6_kP3ug",
-    databaseURL: "https://filasemfila-default-rtdb.firebaseio.com",
-    projectId: "filasemfila"
+  apiKey: "AIzaSyBk7mgMUTUwqRe2bSVDtvbJZ80g6_kP3ug",
+  authDomain: "filasemfila.firebaseapp.com",
+  databaseURL: "https://filasemfila-default-rtdb.firebaseio.com",
+  projectId: "filasemfila",
+  storageBucket: "filasemfila.firebasestorage.app",
+  messagingSenderId: "189346378434",
+  appId: "1:189346378434:web:b977d0aa13e5655ba8015b",
+  measurementId: "G-R7VBN74EXX"
 };
 
 const app = initializeApp(firebaseConfig);
