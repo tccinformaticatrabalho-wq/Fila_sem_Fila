@@ -8,8 +8,9 @@ import {
     runTransaction
 } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-database.js";
 
+// FIREBASE
 const firebaseConfig = {
-    apiKey: "SUA_API_KEY",
+    apiKey: "AIzaSyBk7mgMUTUwqRe2bSVDtvbJZ80g6_kP3ug",
     authDomain: "filasemfila.firebaseapp.com",
     databaseURL: "https://filasemfila-default-rtdb.firebaseio.com",
     projectId: "filasemfila",
@@ -19,124 +20,160 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+
 const database = getDatabase(app);
 
 // ELEMENTOS HTML
 const displaySenhaAtual = document.getElementById("senha-atual");
+
 const mensagemStatus = document.getElementById("mensagem-status");
+
 const displayFaltam = document.getElementById("contador-faltam");
+
 const feedback = document.getElementById("feedback-usuario");
 
 // REFERÊNCIAS FIREBASE
 const senhaAtualRef = ref(database, "senha_atual");
+
 const ultimaSenhaRef = ref(database, "ultima_senha_gerada");
 
-// SENHA SALVA NO NAVEGADOR
+// SENHA SALVA
 const senhaSalva = localStorage.getItem("minha_senha");
 
-// MOSTRA FEEDBACK SE JÁ EXISTIR SENHA
-if (senhaSalva && feedback) {
+// MOSTRA FEEDBACK
+if (senhaSalva) {
+
     feedback.classList.remove("hidden");
 }
 
-// ESCUTA ALTERAÇÕES DA FILA
+// ESCUTA ALTERAÇÃO DA FILA
 onValue(
     senhaAtualRef,
+
     (snapshot) => {
+
         const senhaChamando = snapshot.val();
 
-        displaySenhaAtual.textContent = formatarSenha(senhaChamando);
+        displaySenhaAtual.textContent =
+            formatarSenha(senhaChamando);
 
         atualizarCalculo(senhaChamando);
     },
+
     (error) => {
-        console.error("Erro ao acompanhar fila:", error);
+
+        console.error(error);
 
         alert("Erro ao acompanhar fila.");
     }
 );
 
-// GERAR SENHA ÚNICA
-window.gerarNovaSenha = function gerarNovaSenha() {
+// GERAR NOVA SENHA
+window.gerarNovaSenha = function () {
 
-    // EVITA GERAR MAIS DE UMA SENHA NO MESMO CELULAR
-    const senhaExistente = localStorage.getItem("minha_senha");
+    const senhaExistente =
+        localStorage.getItem("minha_senha");
 
+    // EVITA DUPLICIDADE
     if (senhaExistente) {
 
-        alert(`Você já possui a senha ${formatarSenha(senhaExistente)}`);
+        alert(
+            `Você já possui a senha ${formatarSenha(senhaExistente)}`
+        );
 
         return;
     }
 
-    runTransaction(ultimaSenhaRef, (valorAtual) => {
+    runTransaction(
+        ultimaSenhaRef,
 
-        const senhaAtual = Number(valorAtual) || 0;
+        (valorAtual) => {
 
-        // REINICIA EM 1 APÓS 999
-        return senhaAtual >= 999 ? 1 : senhaAtual + 1;
+            const senhaAtual =
+                Number(valorAtual) || 0;
 
-    })
+            // REINICIA APÓS 999
+            return senhaAtual >= 999
+                ? 1
+                : senhaAtual + 1;
+        }
+    )
+
     .then((result) => {
 
         if (!result.committed) return;
 
-        const novaSenha = result.snapshot.val();
+        const novaSenha =
+            result.snapshot.val();
 
         salvarSenhaUsuario(novaSenha);
 
-        mensagemStatus.textContent = `Sua senha é ${formatarSenha(novaSenha)}`;
+        mensagemStatus.textContent =
+            `Sua senha é ${formatarSenha(novaSenha)}`;
 
-        displayFaltam.textContent = "Aguarde sua chamada.";
+        displayFaltam.textContent =
+            "Aguarde sua chamada.";
 
         feedback.classList.remove("hidden");
-
     })
+
     .catch((error) => {
 
-        console.error("Erro ao gerar senha:", error);
+        console.error(error);
 
-        alert("Não foi possível gerar senha.");
+        alert("Erro ao gerar senha.");
     });
 };
 
-// SALVA SENHA NO NAVEGADOR
+// SALVAR SENHA
 function salvarSenhaUsuario(numero) {
 
-    localStorage.setItem("minha_senha", String(numero));
+    localStorage.setItem(
+        "minha_senha",
+        String(numero)
+    );
 
     get(senhaAtualRef)
-        .then((snapshot) => {
 
-            atualizarCalculo(snapshot.val());
+    .then((snapshot) => {
 
-        })
-        .catch((error) => {
+        atualizarCalculo(snapshot.val());
+    })
 
-            console.error("Erro ao atualizar fila:", error);
-        });
+    .catch((error) => {
+
+        console.error(error);
+    });
 }
 
-// ATUALIZA STATUS DA FILA
+// ATUALIZA FILA
 function atualizarCalculo(senhaChamando) {
 
-    const minhaSenha = localStorage.getItem("minha_senha");
+    const minhaSenha =
+        localStorage.getItem("minha_senha");
 
-    if (!minhaSenha) {
+    if (!minhaSenha) return;
+
+    if (
+        senhaChamando === null ||
+        senhaChamando === undefined
+    ) {
         return;
     }
 
-    if (senhaChamando === null || senhaChamando === undefined) {
-        return;
-    }
+    const atual =
+        Number.parseInt(senhaChamando, 10);
 
-    const atual = Number.parseInt(senhaChamando, 10);
+    const minha =
+        Number.parseInt(minhaSenha, 10);
 
-    const minha = Number.parseInt(minhaSenha, 10);
+    if (
+        Number.isNaN(atual) ||
+        Number.isNaN(minha)
+    ) {
 
-    if (Number.isNaN(atual) || Number.isNaN(minha)) {
-
-        mensagemStatus.textContent = "Erro ao calcular posição.";
+        mensagemStatus.textContent =
+            "Erro ao calcular posição.";
 
         displayFaltam.textContent = "";
 
@@ -148,9 +185,11 @@ function atualizarCalculo(senhaChamando) {
     // AINDA NÃO CHEGOU
     if (diferenca > 0) {
 
-        mensagemStatus.textContent = "Sua vez está chegando!";
+        mensagemStatus.textContent =
+            "Sua vez está chegando!";
 
-        displayFaltam.textContent = `Faltam ${diferenca} pessoas`;
+        displayFaltam.textContent =
+            `Faltam ${diferenca} pessoas`;
 
         return;
     }
@@ -158,37 +197,95 @@ function atualizarCalculo(senhaChamando) {
     // É A VEZ
     if (diferenca === 0) {
 
-        mensagemStatus.textContent = "É A SUA VEZ!";
+        mensagemStatus.textContent =
+            "É A SUA VEZ!";
 
-        displayFaltam.textContent = "Dirija-se ao balcão.";
+        displayFaltam.textContent =
+            "Dirija-se ao balcão.";
 
+        // VIBRAÇÃO
         if (navigator.vibrate) {
-            navigator.vibrate([200, 100, 200]);
+
+            navigator.vibrate([
+                200,
+                100,
+                200
+            ]);
         }
 
         return;
     }
 
-    // JÁ PASSOU
-    mensagemStatus.textContent = "Sua senha já passou.";
+    // SENHA PASSOU
+    mensagemStatus.textContent =
+        "Sua senha já passou.";
 
     displayFaltam.textContent = "";
 }
 
-// FORMATA SENHA
+// FORMATAR SENHA
 function formatarSenha(senha) {
 
-    if (senha === null || senha === undefined || senha === "") {
+    if (
+        senha === null ||
+        senha === undefined ||
+        senha === ""
+    ) {
+
         return "00";
     }
 
-    return String(senha).padStart(2, "0");
+    return String(senha)
+        .padStart(2, "0");
 }
 
-// LIMPAR SENHA (OPCIONAL)
-window.limparSenha = function limparSenha() {
+// RESETAR FILA
+window.resetarFila = function () {
 
-    localStorage.removeItem("minha_senha");
+    const confirmar =
+        confirm("Deseja resetar a fila?");
+
+    if (!confirmar) return;
+
+    Promise.all([
+
+        runTransaction(
+            ultimaSenhaRef,
+            () => 0
+        ),
+
+        runTransaction(
+            senhaAtualRef,
+            () => 0
+        )
+
+    ])
+
+    .then(() => {
+
+        localStorage.removeItem(
+            "minha_senha"
+        );
+
+        alert("Fila resetada.");
+
+        location.reload();
+    })
+
+    .catch((error) => {
+
+        console.error(error);
+
+        alert("Erro ao resetar fila.");
+    });
+};
+
+// LIMPAR MINHA SENHA
+window.limparSenha = function () {
+
+    localStorage.removeItem(
+        "minha_senha"
+    );
 
     mensagemStatus.textContent = "";
 
