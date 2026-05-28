@@ -1,4 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
+
 import {
     get,
     getDatabase,
@@ -8,113 +9,158 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBk7mgMUTUwqRe2bSVDtvbJZ80g6_kP3ug",
-  authDomain: "filasemfila.firebaseapp.com",
-  databaseURL: "https://filasemfila-default-rtdb.firebaseio.com",
-  projectId: "filasemfila",
-  storageBucket: "filasemfila.firebasestorage.app",
-  messagingSenderId: "189346378434",
-  appId: "1:189346378434:web:b977d0aa13e5655ba8015b",
-  measurementId: "G-R7VBN74EXX"
+    apiKey: "SUA_API_KEY",
+    authDomain: "filasemfila.firebaseapp.com",
+    databaseURL: "https://filasemfila-default-rtdb.firebaseio.com",
+    projectId: "filasemfila",
+    storageBucket: "filasemfila.firebasestorage.app",
+    messagingSenderId: "189346378434",
+    appId: "1:189346378434:web:b977d0aa13e5655ba8015b"
 };
 
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
+// ELEMENTOS HTML
 const displaySenhaAtual = document.getElementById("senha-atual");
 const mensagemStatus = document.getElementById("mensagem-status");
 const displayFaltam = document.getElementById("contador-faltam");
-const inputSenha = document.getElementById("input-minha-senha");
 const feedback = document.getElementById("feedback-usuario");
-const senhaAtualRef = ref(database, "senha_atual");
 
+// REFERÊNCIAS FIREBASE
+const senhaAtualRef = ref(database, "senha_atual");
+const ultimaSenhaRef = ref(database, "ultima_senha_gerada");
+
+// SENHA SALVA NO NAVEGADOR
 const senhaSalva = localStorage.getItem("minha_senha");
 
-if (senhaSalva && inputSenha && feedback) {
-    inputSenha.value = senhaSalva;
+// MOSTRA FEEDBACK SE JÁ EXISTIR SENHA
+if (senhaSalva && feedback) {
     feedback.classList.remove("hidden");
 }
 
-onValue(senhaAtualRef, (snapshot) => {
-    const senhaChamando = snapshot.val();
-    displaySenhaAtual.textContent = formatarSenha(senhaChamando);
-    atualizarCalculo(senhaChamando);
-}, (error) => {
-    console.error("Erro ao acompanhar a fila:", error);
-    alert("Não foi possível acompanhar a fila agora. Verifique a conexão e as regras do Firebase.");
-});
+// ESCUTA ALTERAÇÕES DA FILA
+onValue(
+    senhaAtualRef,
+    (snapshot) => {
+        const senhaChamando = snapshot.val();
 
+        displaySenhaAtual.textContent = formatarSenha(senhaChamando);
+
+        atualizarCalculo(senhaChamando);
+    },
+    (error) => {
+        console.error("Erro ao acompanhar fila:", error);
+
+        alert("Erro ao acompanhar fila.");
+    }
+);
+
+// GERAR SENHA ÚNICA
 window.gerarNovaSenha = function gerarNovaSenha() {
-    const refUltima = ref(database, "ultima_senha_gerada");
 
-    runTransaction(refUltima, (valorAtual) => {
-        const senhaAtual = Number(valorAtual) || 0;
-        return senhaAtual >= 999 ? 1 : senhaAtual + 1;
-    }).then((result) => {
-        if (!result.committed) return;
+    // EVITA GERAR MAIS DE UMA SENHA NO MESMO CELULAR
+    const senhaExistente = localStorage.getItem("minha_senha");
 
-        const novaSenha = result.snapshot.val();
-        processarNovaSenha(novaSenha);
-        alert(`Sua senha gerada é: ${novaSenha}`);
-    }).catch((error) => {
-        console.error("Erro ao gerar senha:", error);
-        alert("Não foi possível gerar uma nova senha.");
-    });
-};
+    if (senhaExistente) {
 
-window.salvarMinhaSenha = function salvarMinhaSenha() {
-    const minhaSenha = Number.parseInt(inputSenha.value, 10);
+        alert(`Você já possui a senha ${formatarSenha(senhaExistente)}`);
 
-    if (Number.isNaN(minhaSenha) || minhaSenha <= 0 || minhaSenha > 999) {
-        alert("Digite uma senha válida entre 1 e 999!");
         return;
     }
 
-    processarNovaSenha(minhaSenha);
+    runTransaction(ultimaSenhaRef, (valorAtual) => {
+
+        const senhaAtual = Number(valorAtual) || 0;
+
+        // REINICIA EM 1 APÓS 999
+        return senhaAtual >= 999 ? 1 : senhaAtual + 1;
+
+    })
+    .then((result) => {
+
+        if (!result.committed) return;
+
+        const novaSenha = result.snapshot.val();
+
+        salvarSenhaUsuario(novaSenha);
+
+        mensagemStatus.textContent = `Sua senha é ${formatarSenha(novaSenha)}`;
+
+        displayFaltam.textContent = "Aguarde sua chamada.";
+
+        feedback.classList.remove("hidden");
+
+    })
+    .catch((error) => {
+
+        console.error("Erro ao gerar senha:", error);
+
+        alert("Não foi possível gerar senha.");
+    });
 };
 
-function processarNovaSenha(numero) {
+// SALVA SENHA NO NAVEGADOR
+function salvarSenhaUsuario(numero) {
+
     localStorage.setItem("minha_senha", String(numero));
-    inputSenha.value = numero;
-    feedback.classList.remove("hidden");
 
     get(senhaAtualRef)
-        .then((snapshot) => atualizarCalculo(snapshot.val()))
+        .then((snapshot) => {
+
+            atualizarCalculo(snapshot.val());
+
+        })
         .catch((error) => {
-            console.error("Erro ao atualizar cálculo da fila:", error);
-            alert("Senha salva, mas não foi possível calcular a posição na fila.");
+
+            console.error("Erro ao atualizar fila:", error);
         });
 }
 
+// ATUALIZA STATUS DA FILA
 function atualizarCalculo(senhaChamando) {
+
     const minhaSenha = localStorage.getItem("minha_senha");
 
-    if (!minhaSenha || senhaChamando === null || senhaChamando === undefined) {
+    if (!minhaSenha) {
+        return;
+    }
+
+    if (senhaChamando === null || senhaChamando === undefined) {
         return;
     }
 
     const atual = Number.parseInt(senhaChamando, 10);
+
     const minha = Number.parseInt(minhaSenha, 10);
 
     if (Number.isNaN(atual) || Number.isNaN(minha)) {
+
         mensagemStatus.textContent = "Erro ao calcular posição.";
+
         displayFaltam.textContent = "";
+
         return;
     }
 
     const diferenca = minha - atual;
 
-    // Ainda vai chegar
+    // AINDA NÃO CHEGOU
     if (diferenca > 0) {
+
         mensagemStatus.textContent = "Sua vez está chegando!";
+
         displayFaltam.textContent = `Faltam ${diferenca} pessoas`;
+
         return;
     }
 
-    // Chegou a vez
+    // É A VEZ
     if (diferenca === 0) {
+
         mensagemStatus.textContent = "É A SUA VEZ!";
-        displayFaltam.textContent = "Vá ao balcão.";
+
+        displayFaltam.textContent = "Dirija-se ao balcão.";
 
         if (navigator.vibrate) {
             navigator.vibrate([200, 100, 200]);
@@ -123,15 +169,32 @@ function atualizarCalculo(senhaChamando) {
         return;
     }
 
-    // Já passou
+    // JÁ PASSOU
     mensagemStatus.textContent = "Sua senha já passou.";
+
     displayFaltam.textContent = "";
 }
 
+// FORMATA SENHA
 function formatarSenha(senha) {
+
     if (senha === null || senha === undefined || senha === "") {
         return "00";
     }
 
     return String(senha).padStart(2, "0");
 }
+
+// LIMPAR SENHA (OPCIONAL)
+window.limparSenha = function limparSenha() {
+
+    localStorage.removeItem("minha_senha");
+
+    mensagemStatus.textContent = "";
+
+    displayFaltam.textContent = "";
+
+    feedback.classList.add("hidden");
+
+    alert("Senha removida.");
+};
