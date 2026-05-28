@@ -22,6 +22,7 @@ const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
 const displaySenhaAtual = document.getElementById("senha-atual");
+const mensagemStatus = document.getElementById("mensagem-status");
 const displayFaltam = document.getElementById("contador-faltam");
 const inputSenha = document.getElementById("input-minha-senha");
 const feedback = document.getElementById("feedback-usuario");
@@ -96,24 +97,35 @@ function atualizarCalculo(senhaChamando) {
     const minha = Number.parseInt(minhaSenha, 10);
 
     if (Number.isNaN(atual) || Number.isNaN(minha)) {
-        displayFaltam.textContent = "Não foi possível calcular sua posição.";
+        mensagemStatus.textContent = "Erro ao calcular posição.";
+        displayFaltam.textContent = "";
         return;
     }
 
     const diferenca = minha - atual;
 
+    // Ainda vai chegar
     if (diferenca > 0) {
+        mensagemStatus.textContent = "Sua vez está chegando!";
         displayFaltam.textContent = `Faltam ${diferenca} pessoas`;
         return;
     }
 
+    // Chegou a vez
     if (diferenca === 0) {
-        displayFaltam.textContent = "É A SUA VEZ! Vá ao balcão.";
-        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+        mensagemStatus.textContent = "É A SUA VEZ!";
+        displayFaltam.textContent = "Vá ao balcão.";
+
+        if (navigator.vibrate) {
+            navigator.vibrate([200, 100, 200]);
+        }
+
         return;
     }
 
-    displayFaltam.textContent = "Sua senha já passou.";
+    // Já passou
+    mensagemStatus.textContent = "Sua senha já passou.";
+    displayFaltam.textContent = "";
 }
 
 function formatarSenha(senha) {
