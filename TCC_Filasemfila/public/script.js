@@ -178,10 +178,10 @@ function tocarAlertaCurto() {
                 audioContext.destination
             );
 
-            oscillator.frequency.value = 1000;
-            oscillator.type = "sine";
+            oscillator.frequency.value = 1400;
+            oscillator.type = "square";
 
-            gainNode.gain.value = 0.3;
+            gainNode.gain.value = 0.8;
 
             oscillator.start();
 
@@ -222,10 +222,14 @@ function tocarAlertaLongo() {
                 audioContext.destination
             );
 
-            oscillator.frequency.value = 1200;
-            oscillator.type = "sine";
+            oscillator.frequency.value =
+    contador % 2 === 0
+        ? 1000
+        : 1800;
 
-            gainNode.gain.value = 0.4;
+oscillator.type = "square";
+
+gainNode.gain.value = 0.8;
 
             oscillator.start();
 
