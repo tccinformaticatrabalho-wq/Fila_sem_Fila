@@ -12,6 +12,13 @@ body {
     align-items: center;
     min-height: 100vh;
 }
+.logo{
+    display:block;
+    width:220px;
+    max-width:90%;
+    height:auto;
+    margin:0 auto 10px auto;
+}
 
 .app-container {
     width: 100%;
@@ -27,11 +34,22 @@ header h1 {
     font-size: 1.5rem;
     color: #2a5298;
 }
+.logo {
+    width: 180px;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto 5px auto;
+}
+header {
+    margin-bottom: 15px;
+}
 
 #status-loja {
-    color: #666;
+    color: rgb(0, 0, 0);
     font-size: 0.9rem;
     margin-top: 5px;
+    font-weight: bold;
 }
 
 .painel-principal {
@@ -44,8 +62,10 @@ header h1 {
 }
 
 .label {
-    font-size: 0.8rem;
-    opacity: 0.8;
+    font-size: 0.9rem;
+    font-weight: 700;
+    opacity: 1;
+    letter-spacing: 1px;
 }
 
 #senha-atual {
@@ -73,7 +93,10 @@ input:focus {
     outline: none;
     border-color: #2a5298;
 }
-
+input::placeholder {
+    color: black;
+    opacity: 1;
+}
 button {
     background: #2a5298;
     color: white;
@@ -117,3 +140,4 @@ button:hover {
         flex-direction: column;
     }
 }
+
