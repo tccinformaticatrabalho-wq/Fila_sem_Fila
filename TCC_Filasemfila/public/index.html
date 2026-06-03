@@ -9,19 +9,27 @@
 <body>
     <div class="app-container">
         <header>
-            <h1>FILA SEM FILA</h1>
-            <p id="status-loja">Painel em Tempo Real</p>
+            <img
+            src="logo.png"
+            alt="Fila Sem Fila"
+            class="logo"
+        >
+    
+        <p id="status-loja">
+            Painel de Monitoramento
+        </p>
+       
         </header>
 
         <main>
             <section class="painel-principal">
-                <span class="label">CHAMANDO AGORA</span>
+                <span class="label">"CHAMANDO AGORA!"</span>
                 <div id="senha-atual">--</div>
             </section>
 
             <section class="minha-senha-section">
-                <input type="number" id="input-minha-senha" placeholder="Digite sua senha física" min="1" max="999">
-                <button type="button" onclick="salvarMinhaSenha()">Acompanhar</button>
+                <input type="number" id="input-minha-senha" placeholder="Digite sua senha" min="1" max="999">
+                <button type="button" onclick="salvarMinhaSenha()">Salvar Senha</button>
             </section>
 
             <div id="feedback-usuario" class="hidden">
@@ -34,3 +42,4 @@
     <script type="module" src="script.js"></script>
 </body>
 </html>
+
